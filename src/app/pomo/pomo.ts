@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
+import { Timer } from "./timer/timer";
 
 @Component({
   selector: 'app-pomo',
-  imports: [],
+  imports: [Timer],
   templateUrl: './pomo.html',
 })
 

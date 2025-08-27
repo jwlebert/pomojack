@@ -1,0 +1,8 @@
+<p>timer works!</p>
+<button>stop</button>
+{{timeLeft()}}
+@if (!active()) {
+    <button (click)="startTimer()">start</button>
+} @else {
+    <button>pause</button>
+}
