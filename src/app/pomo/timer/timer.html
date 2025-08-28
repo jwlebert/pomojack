@@ -1,6 +1,6 @@
 <p>timer works!</p>
 <button>stop</button>
-{{timeLeft()}}
+{{timeLeft() | TimerDisplayPipe}}
 @if (!active()) {
     <button (click)="startTimer()">start</button>
 } @else {
