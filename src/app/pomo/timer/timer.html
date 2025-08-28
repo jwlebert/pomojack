@@ -4,5 +4,5 @@
 @if (!active()) {
     <button (click)="startTimer()">start</button>
 } @else {
-    <button>pause</button>
+    <button (click)="pauseTimer()">pause</button>
 }

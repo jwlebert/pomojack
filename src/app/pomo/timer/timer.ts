@@ -1,25 +1,32 @@
 import { Component, computed, effect, Pipe, PipeTransform, signal, WritableSignal } from '@angular/core';
 
-// class TimeRecord {
-//   duration: number;
-//   remaining: number;
-//   public elapsed = computed(() => this.duration - this.remaining);
-//   segments: [Date, Date?][];
+class TimeRecord {
+  duration: number;
+  remaining: number;
+  segments: WritableSignal<[Date, Date?][]>;
+  public curSegment = computed(() => 
+    this.segments()[this.segments().length - 1]
+  )
 
-//   public constructor(duration = 20 * 60) {
-//     this.duration = duration;
-//     this.remaining = duration;
-//     this.segments = [];
-//   }
+  public constructor(duration = 20 * 60) {
+    this.duration = duration;
+    this.remaining = duration;
+    this.segments = signal([]);
+  }
 
-//   public startSegment() {
-//     this.segments = [...this.segments, [new Date(), undefined]];
-//   }
+  public startSegment() {
+    this.segments.set([...this.segments(), [new Date(), undefined]]);
+  }
 
-//   public endSegment() {
+  public endSegment() {
+    const copy = [...this.segments()];
+    copy[copy.length - 1][1] = new Date();
+    this.segments.set(copy);
 
-//   }
-// }
+    const latest = this.curSegment() as [Date, Date];
+    this.remaining -= Math.floor((latest[1].getTime() - latest[0].getTime()) / 1000);
+  }
+}
 
 @Pipe({ name: 'TimerDisplayPipe'})
 export class TimerDisplayPipe implements PipeTransform {
@@ -45,8 +52,7 @@ export class TimerDisplayPipe implements PipeTransform {
 
 export class Timer {
   public active = signal(false);
-  public duration = 20 * 60;
-  private start = signal(new Date());
+  private record = signal(new TimeRecord());
 
   private now = signal(new Date());
   constructor() {
@@ -65,13 +71,21 @@ export class Timer {
   }
   
   public startTimer() {
-    this.active.set(true);
+    this.record().startSegment();
     this.now.set(new Date());
-    this.start.set(new Date());
+    this.active.set(true);
+  }
+
+  public pauseTimer() {
+    this.record().endSegment();
+    this.active.set(false);
   }
 
   public timeLeft = computed(() => {
-    const elapsed = this.now().getSeconds() - this.start().getSeconds();
-    return this.duration - elapsed;
+    if (!this.active()) return this.record().remaining;
+
+    const start = this.record().curSegment()[0];
+    const elapsed = Math.floor((this.now().getTime() - start.getTime()) / 1000);
+    return this.record().remaining - elapsed;
   })
 }
